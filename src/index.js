@@ -1,4 +1,4 @@
-const Date = require('./date_module');
+Date = require('./date_module');
 const prefix = '/'
 const path = 'sdcard/msgbot/Data/todo.json'
 const FS = FileStream;
@@ -109,10 +109,6 @@ const format = function (string) {
 	}
 };
 
-const day_label = [
-    '금', '토', '일', '월', '화', '수', '목'
-];
-
 const on_message = (msg) => {
     if (!msg.content.startsWith(prefix)) return;
 
@@ -128,7 +124,7 @@ const on_message = (msg) => {
     var string = String();
 
     for (let i = now; i < now + 7; i++) {
-        string += format("{}요일 {}\n", day_label[now % 7], (i < 3) ? (i < 2) ? (i < 1) ? '(오늘)' : '(내일)' : '(모레)' : '');
+        string += format("{}요일 {}\n", Date.dayLabelList()[now % 7], (i < 3) ? (i < 2) ? (i < 1) ? '(오늘)' : '(내일)' : '(모레)' : '');
         
         if (calender[i].length == 0) {
             string += "  ■ 아직은 없습니다.\n";

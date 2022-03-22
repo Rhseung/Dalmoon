@@ -22,6 +22,17 @@ module.exports = (function() {
             return this;
         };
 
+        $D.dayLabelList = function() {
+            var labelList = [];
+            var dayLabelName = "일월화수목금토";
+
+            for (let i = 0; i < 7; i++) {
+                labelList[i] = dayLabelName[(new Date("2022/1/1").getDay() + i) % 7];
+            }
+
+            return labelList;
+        }
+
         $D.today = function () {
             return new Date().clearTime();
         };
