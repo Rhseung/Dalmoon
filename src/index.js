@@ -116,28 +116,41 @@ const on_message = (msg) => {
     msg.options = msg.content.split(' ');
     msg.replyf = function () { msg.reply(format.apply(null, arguments)); }
     
-    // yes ✅ no ⛔
-    var calender = FS.load(path); // 🗓️📆📅
-    var now = Date.getDayOfYear();
+    // yes ✅ no ⛔ 🗓️📆📅
+    var calender = FS.load(path);
 
-    /* 과제 일반 출력 */
-    var string = String();
-
-    for (let i = now; i < now + 7; i++) {
-        string += format("{}요일 {}\n", Date.dayLabelList()[now % 7], (i < 3) ? (i < 2) ? (i < 1) ? '(오늘)' : '(내일)' : '(모레)' : '');
-        
-        if (calender[i].length == 0) {
-            string += "  ■ 아직은 없습니다.\n";
-        }
-        else {
-            for (let j = 0; j < calender[i].length; j++) {
-                string += format("  ■ {} 🏷️{}\n", calender[i][j].content, calender[i][j].subject);
-            }
-        }
-    }
+    commands[msg.options[0]](msg, calender);
 
     /* 과제 저장 */
     added_hwork = new Homework(subjects.물리실험, '클래스룸 설문지 하기', new Date("2022/03/25"));
     calender[added_hwork.date.getDayOfYear()].push(added_hwork);
     FS.save(path, calender);
 };
+
+const commands = {
+    /**
+     * /과제
+     * ㄴ 쭈루룩
+     */
+    "과제": (msg, data) => {
+        var now = Date.getDayOfYear();
+        var string = String();
+
+        for (let i = now; i < now + 7; i++) {
+            string += format("{}요일 {}\n", Date.dayLabelList()[now % 7], (i < 3) ? (i < 2) ? (i < 1) ? '(오늘)' : '(내일)' : '(모레)' : '');
+            
+            if (calender[i].length == 0) {
+                string += "  ■ 아직은 없습니다.\n";
+            }
+            else {
+                for (let j = 0; j < calender[i].length; j++) {
+                    string += format("  ■ {} 🏷️{}\n", calender[i][j].content, calender[i][j].subject);
+                }
+            }
+        }
+
+        msg.reply(string);
+    },
+
+    "시간표"    
+}
