@@ -152,5 +152,13 @@ const commands = {
         msg.reply(string);
     },
 
-    "시간표"    
+    "시간표": (msg, data) => {},
+    "급식": (msg, data) => {},
+    "어제": (msg, data) => {},
+    "오늘": (msg, data) => {
+        // 시간표
+        // 과제
+        // 급식
+    },
+    "내일": (msg, data) => {},
 }
