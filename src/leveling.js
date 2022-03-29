@@ -1,3 +1,3 @@
 const bot = BotManager.getCurrentBot();
 
-users = FS.read()
+users = FS.read();

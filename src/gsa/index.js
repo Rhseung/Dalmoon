@@ -1,6 +1,6 @@
 Date = require('./date_module');
-const prefix = '/'
-const path = 'sdcard/msgbot/Data/todo.json'
+const PREFIX = '[나를 멘션] @'
+const PATH = 'sdcard/msgbot/Data/todo.json'
 const FS = FileStream;
 
 // 0일 째 는 없으니까 앞은 없고, 윤년 때문에 366번째 인덱스까지, 총 길이 367
@@ -30,10 +30,15 @@ function Subject(title, teacher, date){
     this.date = date;
 }
 
-function Homework(subject, content, date) {
+function Task(subject, content, date) {
     this.subject = subject;
     this.content = content;
     this.date = date;
+    this.repeat = {
+        kind: [], // 매번, 매달, 매일, 매주 등
+        when: [],
+        until: false,
+    };
 }
 
 const teachers = {
@@ -110,21 +115,24 @@ const format = function (string) {
 };
 
 const on_message = (msg) => {
-    if (!msg.content.startsWith(prefix)) return;
+    if (!msg.content.startsWith(PREFIX)) return;
 
-    msg.content = msg.content.substring(1);
-    msg.options = msg.content.split(' ');
+    msg.content = msg.content.substring(9);
+    var splited = msg.content.split(/ +|\\n+/).slice(1);
+
+    msg.content = splited.join(' ');
+    msg.options = splited;
     msg.replyf = function () { msg.reply(format.apply(null, arguments)); }
     
     // yes ✅ no ⛔ 🗓️📆📅
-    var calender = FS.load(path);
+    var calender = FS.load(PATH);
 
     commands[msg.options[0]](msg, calender);
 
     /* 과제 저장 */
-    added_hwork = new Homework(subjects.물리실험, '클래스룸 설문지 하기', new Date("2022/03/25"));
+    added_hwork = new Task(subjects.물리실험, '클래스룸 설문지 하기', new Date("2022/03/25"));
     calender[added_hwork.date.getDayOfYear()].push(added_hwork);
-    FS.save(path, calender);
+    FS.save(PATH, calender);
 };
 
 const commands = {
@@ -153,7 +161,9 @@ const commands = {
     },
 
     "시간표": (msg, data) => {},
-    "급식": (msg, data) => {},
+    "급식": (msg, data) => {    
+        // 파싱
+    },
     "어제": (msg, data) => {},
     "오늘": (msg, data) => {
         // 시간표
@@ -161,4 +171,6 @@ const commands = {
         // 급식
     },
     "내일": (msg, data) => {},
+
+    "캘린더": (msg, data) => {}
 }
