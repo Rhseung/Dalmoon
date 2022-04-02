@@ -9,12 +9,17 @@ function Subject(title, teacher, date){
     this.date = Array.isArray(date) ? date : [date];
 }
 
-function Task(subject, content='', date=[]) {
+function Task(subject, content = '', date = []) {
     this.subject = subject;
     this.content = content;
-    this.date = Array.isArray(date) ? date : [date];
+    this.date = {
+        month: null,
+        day: null,
+        label: null
+    };
+
     this.repeat = {
-        every: null, // 매번, 매달, 매일, 매주 등
+        cycle: null, // 매번, 매달, 매일, 매주 등
         until: false,
     };
 }
@@ -98,7 +103,8 @@ const subjects = {
 
 const regexs = {
     요일: /([월화수목금토일])요일/,
-    날짜: /(\d+일)|(\d+월)/,
+    월: /(\d+)월/,
+    일: /(\d+)일/,
     반복: /(?:매|격)(일|주|월|달|번|수업)/, // 매일 -> 요일이나 일 지정 없음, 매주 -> 요일 지정, 매월 -> 일 지정, 매번, 매수업 -> 요일
     
     //까지
@@ -112,26 +118,36 @@ function cognize(string, regex) {
 
     arr.forEach(str => {
         let m1 = str.match(regex.요일);
-        let m2 = str.match(regex.날짜);
-        let m3 = str.match(regex.반복);
+        let m2 = str.match(regex.월);
+        let m3 = str.match(regex.일);
+        let m4 = str.match(regex.반복);
+
+        console.log(m1, m2, m3, m4);
 
         if (str.startsWith('@')) {
             task.subject = subjects[str.slice(1)];
         }
 
-        else if (m1 != null) {
-            task.date.push(dayLabels[m1[1]]);
+        else if (m1 != null) { // 요일
+            console.log(m1);
+            task.date.label = (dayLabels[m1[1]]); // TODO date 타입 array -> object 로 바뀜
         }
         
-        else if (m2 != null) {
-            task.date.push(m2[1]);
+        else if (m2 != null) { // 월
+            console.log(m2);
+            task.date.month = (m2[1]); // TODO date 타입 array -> object 로 바뀜
+        }
+
+        else if (m3 != null) { // 일
+            console.log(m3);
+            task.date.day = (m3[1]); // TODO date 타입 array -> object 로 바뀜
         }
         
-        else if (m3 != null) {
+        else if (m4 != null) { // 반복
             if (repeatKinds[m3[1]] == 'CLASS') {
                flag = true; 
             }
-            task.repeat.every = (repeatKinds[m3[1]]);
+            task.repeat.cycle = (repeatKinds[m3[1]]);
         }
 
         else {
@@ -140,32 +156,40 @@ function cognize(string, regex) {
     });
     task.content = task.content.trim();
 
-    if (flag) {
+    if (flag && task.subject != null) {
         task.date = task.subject.date;
     }
 
     return task;
 }
 
-const samples = [
-    "@생물실험 보고서 쓰기 매주 수요일",
-    "매번 로그 쓰기 @영어1B",
-    "매달 읭 dmld dmldmefijefjef @체육 ㅑ더랴ㅓㅈㄷㄹ 28일",
-    "매 7월 19일 어머니께 생신 카드 보내기",
-    "격주 수요일마다 재활용 내놓기"
-];
+// const samples = [
+    // "",
+    // "매번 로그 쓰기 @영어1B",
+    // "매달 읭 dmld dmldmefijefjef @체육 ㅑ더랴ㅓㅈㄷㄹ 28일",
+    // "매 7월 19일 어머니께 생신 카드 보내기",
+    // "격주 수요일마다 재활용 내놓기"
+//     "@화학1B 복습문제 풀기 7월 7일"
+// ];
+// const bot = BotManager.getCurrentBot();
 
-for (i of samples) {
-    let result = cognize(i, regexs);
-    console.log(`\n>> "${i}" 해석 결과`+
-                        `\n과목: `+
-                        `\n  ㄴ 과목명: "${result.subject.title}"`+
-                        `\n  ㄴ 선생님명: "${result.subject.teacher.name}"`+
-                        `\n  ㄴ 일정: ${JSON.stringify(result.subject.date)}`+
-                        `\n과제 내용: "${result.content}"`+
-                        `\n과제 일정: ${JSON.stringify(result.date)}`+
-                        `\n과제 반복: `+
-                        `\n  ㄴ 주기: ${result.repeat.every}`+
-                        `\n  ㄴ 기한: ${result.repeat.until}\n`
-                );
+function onMessage(msg, c) {
+    let result = cognize(c, regexs);
+    msg.log(`\n"${c}" 해석 결과\n`+
+            `-`.repeat(c.length + 10)+
+            `\n과목명: "${(result.subject == null) ? null : result.subject.title}"`+
+            `\n선생님명: "${(result.subject == null) ? null : result.subject.teacher.name}"`+
+            `\n수업 일정: ${JSON.stringify((result.subject == null) ? null : result.subject.date)}`+
+            `\n과제 내용: "${result.content}"`+
+            `\n과제 일정: ${JSON.stringify(result.date)}`+
+            `\n과제 반복 주기: ${result.repeat.every}`+
+            `\n과제 반복 기한: ${result.repeat.until}\n`
+    );
 }
+// bot.addListener(Event.MESSAGE, onMessage);
+
+// FIXME 과목명 탐지 안될 시 오류 뱉음
+onMessage(console, '@생물실험 보고서 쓰기 매주 수요일');
+onMessage(console, '@화학1B 복습문제 풀기 7월 7일');
+onMessage(console, '매 7월 19일 어머니께 생신 카드 보내기');
+onMessage(console, '격주 수요일마다 재활용 내놓기');
