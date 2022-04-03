@@ -1,24 +1,32 @@
 const bot = BotManager.getCurrentBot();
-const { Command, Message } = require('./module');
+const { Container, Message } = require('./module');
 
-var Command = new Command();
-var Message = new Message().setPrefix('/');
+var container = new Container();
+var message = new Message().setPrefix('/');
 
 bot.on(Event.MESSAGE, (msg) => {
-    Message.set(msg);
-
-    Command.register(triangle, Number, Number, Number);
-    Command.register(ping);
-
-    Command.execute(Message);
+    message.set(msg);
+    container.execute(message);
 });
 
-triangle = (a, b, c) => {
+function help () {
+
+}
+container.register(help).aliase('?').option({ many: true });
+
+function triangle (a, b, c) {
     let s = (a + b + c) / 2;
 
-    Message.replyf("triangle's surface: {}", Math.sqrt(s * (s-a) * (s-b) * (s-c)));
+    message.replyf("triangle's surface: {}", Math.sqrt(s * (s-a) * (s-b) * (s-c)));
 };
+container.register(triangle, Number, Number, Number);
 
-ping = () => {
-    Message.reply("pong");
+function add () {
+    message.replyf("sum: {}", Array.from(arguments).reduce((acc, cur) => acc + cur));
 }
+container.register(add, Number, Number, Number).option({ many: true });
+
+function ping () {
+    message.reply("pong");
+}
+container.register(ping);

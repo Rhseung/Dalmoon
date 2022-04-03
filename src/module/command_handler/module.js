@@ -1,7 +1,12 @@
 /** Command Handler
+ * @author Rhseung 22027
+ * 
+ * UPDATE ---
  * @version 1.0
  * @date 2022.4.2
- * @author Rhseung 22027
+ * 
+ * @version 1.1
+ * @date 2022.4.3
  */
 
 /** Message class
@@ -35,15 +40,16 @@ const format = function (string) {
 	let options = Array.from(arguments).slice(1);
 
 	if (options.length == 1 && options[0] instanceof Object) {
-		return string.replace(/{(.*?)}/g, (_, g1) => options[0][g1.trim()]);
-	} else {
+		return string.replace(/{(.*?)}/g, (_, g1) => options[0][g1.trim()].toString());
+	}
+    else {
 		let last = 0;
-		return string.replace(/{(.*?)}/g, (matched, g1) => (g1 === "" ? options[++last - 1] : options[g1] || matched));
+		return string.replace(/{(.*?)}/g, (matched, g1) => (g1 === "" ? options[++last - 1] : options[g1] || matched).toString());
 	}
 };
 
 Message.prototype = {
-    set: function (msg) {
+    build: function (msg) {
         this.isCommand = msg.content.startsWith(this.prefix);
         this.content = msg.content.replace(this.prefix, '');
         this.args = this.content.split(/ |\\n+/);
@@ -53,7 +59,7 @@ Message.prototype = {
         this.isGroupChat = msg.isGroupChat;
         this.isDebugRoom = msg.isDebugRoom;
         this.author = msg.author;
-        this.reply = msg.reply;
+        this.reply = (s) => msg.reply(s);
         this.replyf = function () { msg.reply(format.apply(null, arguments)); }
         this.markAsRead = msg.markAsRead;
         this.packageName = msg.packageName;
@@ -63,33 +69,75 @@ Message.prototype = {
     setPrefix: function (prefix) {
         this.prefix = prefix;
         return this;
+    },
+
+    toString: function () {
+        
     }
 };
 
 /** Command class
- * 명령어 관련 클래스.
- * 자체에는 컨테이너 기능만 있지만, 명령어 등록이나 실행 정도의 메소드가 있음.
+ * 명령어 노드 각각을 역할하는 클래스.
+ * 
+ * @version bugfix_1 (2022.4.3)
+ ** 추가됨.
  */
-function Command() {
-    this.commands = [];
+function Command(func, types) {
+    this.aliase;
+    this.func;
+    this.types;
+
+    this.many = false; // 가변인자 true/false
 }
 
 Command.prototype = {
+    aliase: function (aliase) {
+        this.aliase = aliase;
+    },
+
+    option: function (config) {
+        this.many = Boolean(config.many) || false;
+
+        return this;
+    },
+    
+    toString: function () {
+        
+    }
+};
+
+/** Container class
+ * 명령어 컨테이너 클래스.
+ * 자체에는 컨테이너 기능만 있지만, 명령어 등록이나 실행 정도의 메소드가 있음.
+ * 
+ * @version bugfix_1 (2022.4.3)
+ ** 속성 (many) 추가됨, 가변인자 사용 툴
+ ** Command -> Container 로 재작명, commands 배열 안에 각각의 노드(Command)가 들어가게 함
+ */
+function Container() {
+    this.commands = [];
+}
+
+Container.prototype = {
     execute: function (message) {
         if (!message.isCommand) return;
     
         let matched_command;
-        this.commands.forEach(obj => {
-            if (obj.func.name == message.command) {
-                matched_command = obj;
+        this.commands.forEach(cmd => {
+            if ((cmd.func.name == message.command) || (cmd.func.aliase == message.command)) {
+                if ((cmd.many == true) || (cmd.func.length == message.args.length)) {
+                    matched_command = cmd;
+                }
             }
         });
     
         if (matched_command == null) return;
-    
-        for (let idx = 0; idx < matched_command.types.length; idx++) {
-            if ((matched_command.types[idx] != null) && (matched_command.types[idx].constructor == Function)) {
-                message.args[idx] = matched_command.types[idx](message.args[idx]);
+        
+        if (matched_command.types.length != 0) {
+            for (let idx = 0; idx < Math.min(matched_command.types.length, message.args.length); idx++) {
+                if ((matched_command.types[idx] != null) && (matched_command.types[idx].constructor == Function)) {
+                    message.args[idx] = matched_command.types[idx](message.args[idx]);
+                }
             }
         }
     
@@ -100,11 +148,17 @@ Command.prototype = {
         let args = Array.from(arguments);
         if (args.length == 0) return;
     
-        this.commands.push({ func: args[0], types: args.slice(1) });
+        this.commands.push(new Command(args[0], args.slice(1)));
+
+        return this.commands[this.commands.length - 1];
+    },
+
+    toString: function () {
+
     }
 };
 
 module.exports = {
     Message: Message,
-    Command: Command
+    Command: Container
 };
