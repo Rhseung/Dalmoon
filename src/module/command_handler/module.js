@@ -84,8 +84,8 @@ Message.prototype = {
  */
 function Command(func, types) {
     this.aliase;
-    this.func;
-    this.types;
+    this.func = func;
+    this.types = types;
 
     this.many = false; // 가변인자 true/false
 }
@@ -93,6 +93,8 @@ function Command(func, types) {
 Command.prototype = {
     aliase: function (aliase) {
         this.aliase = aliase;
+
+        return this;
     },
 
     option: function (config) {
@@ -124,7 +126,7 @@ Container.prototype = {
     
         let matched_command;
         this.commands.forEach(cmd => {
-            if ((cmd.func.name == message.command) || (cmd.func.aliase == message.command)) {
+            if ((cmd.func.name == message.command) || (cmd.aliase == message.command)) {
                 if ((cmd.many == true) || (cmd.func.length == message.args.length)) {
                     matched_command = cmd;
                 }
