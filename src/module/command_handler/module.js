@@ -160,5 +160,5 @@ Container.prototype = {
 
 module.exports = {
     Message: Message,
-    Command: Container
+    Container: Container
 };

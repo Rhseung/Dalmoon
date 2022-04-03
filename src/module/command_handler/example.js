@@ -5,14 +5,9 @@ var container = new Container();
 var message = new Message().setPrefix('/');
 
 bot.on(Event.MESSAGE, (msg) => {
-    message.set(msg);
+    message.build(msg);
     container.execute(message);
 });
-
-function help () {
-
-}
-container.register(help).aliase('?').option({ many: true });
 
 function triangle (a, b, c) {
     let s = (a + b + c) / 2;
@@ -22,7 +17,7 @@ function triangle (a, b, c) {
 container.register(triangle, Number, Number, Number);
 
 function add () {
-    message.replyf("sum: {}", Array.from(arguments).reduce((acc, cur) => acc + cur));
+    message.replyf("sum: {}", Array.from(arguments).map(Number).reduce((acc, cur) => acc + cur));
 }
 container.register(add, Number, Number, Number).option({ many: true });
 

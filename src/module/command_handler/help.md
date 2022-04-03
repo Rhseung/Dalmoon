@@ -1,1 +1,2 @@
-## COMMAND HANDLER 
+# Command Handler Docs
+
