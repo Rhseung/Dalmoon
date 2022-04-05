@@ -35,17 +35,17 @@ var message = new Message();
 ### Methods
 - [build](#build)
 - [setPrefix](#setPrefix)
----
+
 
 ## build
 ```js
 Message.build(msg)
 ```
-`msg` 를 직접 지정한 `commandprefix` 를 사용해 가공합니다.  
+`msg` 를 가공합니다.  
 
 Parameter | Type
 ---|---
-`msg` | `Message`
+`msg` | `Message`(CommandHandler의 Message가 아닌 API2의 Message)
 
 ## setPrefix
 ```js
@@ -69,7 +69,7 @@ var container = new Container();
 ### Methods
 - [register](#register)
 - [execute](#execute)
----
+
 
 ## register
 ```js
@@ -98,7 +98,7 @@ Parameter | Type
 ### Methods
 - [aliase](#aliase)
 - [option](#option)
----
+
 
 ## aliase
 ```js
@@ -123,3 +123,11 @@ Property | Type | Description
 Parameter | Type
 ---|---
 `config` | `Object`
+
+#### example
+```js
+function command(...) {
+    ...
+}
+Container.register(command, ...).option({ many: true });
+```
