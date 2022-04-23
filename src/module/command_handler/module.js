@@ -1,5 +1,5 @@
-/** Command Handler
- * @author Rhseung 22027
+/** Simple Command Handler
+ * @author Rhseung
  * 
  * UPDATE ---
  * @version 1.0
@@ -11,7 +11,7 @@
 
 /** Message class
  * 기존의 msg객체를 전역으로 선언하기 위해 만든 툴.
- * 근데 replyf 같은 기능성 함수도 더 추가할 예정.
+ * replyf 같은 기능성 함수도 더 추가할 예정.
  */
 function Message() {
     this.prefix = '';
@@ -23,10 +23,10 @@ function Message() {
     this.isGroupChat;
     this.isDebugRoom;
     this.author = {
-        name: '', // 메시지를 보낸 유저의 이름
-        avatar: { // 메시지 전송자 프로필에 대한 정보
-            getBase64: null, // 전송자 프로필의 Base64 값을 반환
-            getBitmap: null // 전송자 프로필의 android.graphics.Bitmap을 반환
+        name: '',
+        avatar: {
+            getBase64: null,
+            getBitmap: null
         }
     };
     this.reply;
@@ -79,7 +79,7 @@ Message.prototype = {
 /** Command class
  * 명령어 노드 각각을 역할하는 클래스.
  * 
- * @version bugfix_1 (2022.4.3)
+ * @version 1.1 (2022.4.3)
  ** 추가됨.
  */
 function Command(func, types) {
@@ -112,7 +112,7 @@ Command.prototype = {
  * 명령어 컨테이너 클래스.
  * 자체에는 컨테이너 기능만 있지만, 명령어 등록이나 실행 정도의 메소드가 있음.
  * 
- * @version bugfix_1 (2022.4.3)
+ * @version 1.1 (2022.4.3)
  ** 속성 (many) 추가됨, 가변인자 사용 툴
  ** Command -> Container 로 재작명, commands 배열 안에 각각의 노드(Command)가 들어가게 함
  */

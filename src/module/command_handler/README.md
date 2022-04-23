@@ -1,6 +1,8 @@
-# Command Handler Docs
+## command handler.js reference
 
-채팅 명령어 구조를 더욱 쉽게 만들어줍니다.
+### Constructor
+
+채팅 명령어 구조를 더욱 쉽게 만들어줍니다.  
 알림 기반 카카오톡 봇에서 사용 가능한 모듈입니다. (API2 전용)
 
 기본 코드는 다음과 같습니다.
@@ -44,7 +46,7 @@ var message = new Message();
 ```js
 Message.build(msg)
 ```
-`msg` 를 가공합니다.  
+> msg 를 가공합니다.  
 
 Parameter | Type
 ---|---
