@@ -1,12 +1,5 @@
 /** Simple Command Handler
  * @author Rhseung
- * 
- * UPDATE ---
- * @version 1.0
- * @date 2022.4.2
- * 
- * @version 1.1
- * @date 2022.4.3
  */
 
 /** Message class
@@ -19,7 +12,7 @@ function Message() {
     this.content;
     this.args;
     this.command;
-    this.room;
+    this.room; 
     this.isGroupChat;
     this.isDebugRoom;
     this.author = {
