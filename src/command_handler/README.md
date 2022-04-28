@@ -88,7 +88,7 @@ name | type
 }
 ```
 #### example
- `msg.replyf(content, formats)` 사용법은 다음과 같습니다.
+`msg.replyf(content, formats)` 사용법은 다음과 같습니다.
 ```js
 // { } 속이 비어있는 경우, formats[0], formats[1], ... 순으로 순서가 자동 지정되어 대입됩니다.
 msg.replyf("{} + {} = {}", 1, 1, 2)
@@ -112,7 +112,7 @@ msg.replyf("{n1} + {n2} = {res}", { n1: 1, n2: 1, res: 2 })
 ```js
 // 기본 코드
 
-var { Container } = require("CommandHandler")
+var { Container } = require("{PATH}")
 var container = new Container();
 ```
 Methods
@@ -141,8 +141,6 @@ Container.execute(message)
 name | type
 ---|---
 `message` | `Message`
-
----
 
 ## Command class
 Methods
