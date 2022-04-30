@@ -207,15 +207,15 @@ function getMeal(APIkey, areaCode, schoolCode, date) {
     return (data.mealServiceDietInfo[0].head[2].RESULT.CODE == "INFO-000") ? {
         breakfast: {
             calorie: data.mealServiceDietInfo[1].row[0].CAL_INFO,
-            dishes: data.mealServiceDietInfo[1].row[0].DDISH_NM.replace(/\(.*?\)/g, '').split(' ')
+            dishes: data.mealServiceDietInfo[1].row[0].DDISH_NM.replace(/ ?\(.*?\)/g, '').trim().split(' ')
         },
         lunch: {
             calorie: data.mealServiceDietInfo[1].row[1].CAL_INFO,
-            dishes: data.mealServiceDietInfo[1].row[1].DDISH_NM.replace(/\(.*?\)/g, '').split(' ')
+            dishes: data.mealServiceDietInfo[1].row[1].DDISH_NM.replace(/ ?\(.*?\)/g, '').trim().split(' ')
         },
         dinner: {
             calorie: data.mealServiceDietInfo[1].row[2].CAL_INFO,
-            dishes: data.mealServiceDietInfo[1].row[2].DDISH_NM.replace(/\(.*?\)/g, '').split(' ')
+            dishes: data.mealServiceDietInfo[1].row[2].DDISH_NM.replace(/ ?\(.*?\)/g, '').trim().split(' ')
         },
         result: {
             code: "INFO-000",
