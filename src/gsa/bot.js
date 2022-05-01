@@ -1,11 +1,11 @@
 const bot = BotManager.getCurrentBot();
 
-const Date = require('new_date.js');
-const School = require('./module/school');
-const { Container, Message } = require('command_handler.js'); 
+var Date = require('new_date.js');
+var School = require('school.js');
+var { Container, Message } = require('Mp2.js'); 
 
 var container = new Container();
-var message = new Message().setPrefix('[나를 멘션] @');
+var message = new Message();
 
 bot.on(Event.MESSAGE, msg => {
     if (msg.room != "101") return;

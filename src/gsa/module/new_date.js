@@ -21,6 +21,21 @@ $P.setTimeToNow = function () {
     return this;
 };
 
+$P.compareTo = function (time) {
+    var t1 = new Date(1970, 1, 1, this.getHours(), this.getMinutes(), this.getSeconds()), t2;
+    if (time === null) { 
+        t2 = new Date(1970, 1, 1, 0, 0, 0); 
+    }
+    else {
+        t2 = new Date(1970, 1, 1, time.getHours(), time.getMinutes(), time.getSeconds());
+    }
+    return (t1 < t2) ? -1 : (t1 > t2) ? 1 : 0;
+};
+
+$P.equals = function (time) {
+    return (this.compareTo(time) === 0);
+};   
+
 $D.dayLabelList = function() {
     var labelList = [];
     var dayLabelName = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -53,7 +68,7 @@ $D.isLeapYear = function (year) {
     return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0); 
 };
 
-$D.getDaysInMonth = function (year, month=false) {
+$D.getDaysInMonth = function (year, month) {
     return month ? [31, ($D.isLeapYear(year) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
                     : [31, ($D.isLeapYear(year) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 };
@@ -75,7 +90,7 @@ $P.isAfter = function (date) {
 };
 
 $P.isBefore = function (date) {
-    return (this.compareTo(date || new Date()) === -1);
+    return this.compareTo(date || new Date()) === -1;
 };
 
 $P.isToday = $P.isSameDay = function (date) {

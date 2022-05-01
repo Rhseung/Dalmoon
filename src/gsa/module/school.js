@@ -1,5 +1,5 @@
-var Date = require('./new_date');
-var len = require('./utils');
+var Date = require('new_date');
+var len = require('utils');
 
 /**
  * @param {String} name 
@@ -71,7 +71,8 @@ Calender.prototype = {
     //     return this;
     // },
 
-    addDailySchedule: function(content, date = new Date()) {
+    addDailySchedule: function(content, date) {
+        if (date == null) date = new Date();
         for (let i = date.getDayOfYear(); i < len(this.cals); i++) {
             this.cals[i].push(content);
         }
@@ -79,7 +80,8 @@ Calender.prototype = {
         return this;
     },
 
-    addWeeklySchedule: function(content, date = new Date()) {
+    addWeeklySchedule: function(content, date) {
+        if (date == null) date = new Date();
         let i = date.getDayOfYear();
 
         while (i <= (Date.isLeapYear ? 366 : 365)) {
@@ -94,7 +96,7 @@ Calender.prototype = {
         let m = new Date().getMonth();
         let i = Date.getDayOfYear();
 
-        while (i <= (Date.isLeapYear ? 366 : 365)) {
+        while (i <= (Date.isLeapYear(new Date().getFullYear()) ? 366 : 365)) {
             this.cals[i].push(content);
             i += Date.getDaysInMonth(m);
             m++;
@@ -112,8 +114,8 @@ Calender.prototype = {
         return this;
     },
 
-    getRange: function (from = Date.getDayOfYear(), to = (Date.getDayOfYear() + 6)) {
-        return this.cals.slice(from, to + 1);
+    getRange: function (from, to) {
+        return this.cals.slice(from || Date.getDayOfYear(), (to || (Date.getDayOfYear() + 5)) + 1);
     }
 };
 
@@ -229,67 +231,67 @@ function getMeal(APIkey, areaCode, schoolCode, date) {
     };
 }
 
-var calendar = new Calender();
-calendar.setWeeklySchedule({
-    mon: [
-        classes.사회,
-        classes.사회,
-        classes.국어1B,
-        classes.생물1B,
-        classes.창체,
-        classes.화학1A,
-        classes.영어1B
-    ],
+// var calendar = new Calender();
+// calendar.setWeeklySchedule({
+//     mon: [
+//         classes.사회,
+//         classes.사회,
+//         classes.국어1B,
+//         classes.생물1B,
+//         classes.창체,
+//         classes.화학1A,
+//         classes.영어1B
+//     ],
 
-    tue: [
-        classes.화학실험,
-        classes.수학1A,
-        classes.수학1B,
-        classes.물리1A,
-        classes.정보,
-        classes.정보,
-    ],
+//     tue: [
+//         classes.화학실험,
+//         classes.수학1A,
+//         classes.수학1B,
+//         classes.물리1A,
+//         classes.정보,
+//         classes.정보,
+//     ],
 
-    wed: [
-        classes.물리실험,
-        classes.생물1A,
-        classes.생물1A,
-        classes.영어1A,
-        classes.국어1A,
-        classes.국어1A,
-        classes.RnE,
-        classes.RnE,
-        classes.RnE,
-    ],
+//     wed: [
+//         classes.물리실험,
+//         classes.생물1A,
+//         classes.생물1A,
+//         classes.영어1A,
+//         classes.국어1A,
+//         classes.국어1A,
+//         classes.RnE,
+//         classes.RnE,
+//         classes.RnE,
+//     ],
 
-    thu: [
-        classes.화학1A,
-        classes.지구1A,
-        classes.화학1B,
-        classes.체육,
-        classes.영어1C,
-        classes.수학2A,
-        classes.생물실험,
-    ],
+//     thu: [
+//         classes.화학1A,
+//         classes.지구1A,
+//         classes.화학1B,
+//         classes.체육,
+//         classes.영어1C,
+//         classes.수학2A,
+//         classes.생물실험,
+//     ],
 
-    fri: [
-        classes.지구1B,
-        classes.물리1A,
-        classes.물리1B,
-        classes.지구1A,
-        classes.수학2A,
-        classes.수학1A,
-        classes.수학2B,
-    ],
+//     fri: [
+//         classes.지구1B,
+//         classes.물리1A,
+//         classes.물리1B,
+//         classes.지구1A,
+//         classes.수학2A,
+//         classes.수학1A,
+//         classes.수학2B,
+//     ],
 
-    sat: [
+//     sat: [
 
-    ],
+//     ],
 
-    sun: [
+//     sun: [
 
-    ]
-});
+//     ]
+// });
 
 module.exports = {
     getMeal: getMeal,
