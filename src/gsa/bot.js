@@ -1,7 +1,5 @@
 const bot = BotManager.getCurrentBot();
-
-var Date = require('new_date.js');
-var School = require('school.js');
+const COMPRESS = "\n" + "\u200b".repeat(500);
 var { Container, Message } = require('Mp2.js'); 
 
 var container = new Container();
@@ -14,126 +12,329 @@ bot.on(Event.MESSAGE, msg => {
     container.execute(message);
 });
 
-function 아침() {
-    var todayMeal = School.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
-    var tomorrowMeal = School.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
+Date.prototype.addDays = function (value) {
+    this.setDate(this.getDate() + value * 1);
+    return this;
+};
 
-    var clock = {
-        breakfast: Date.today().addHours(8).addMinutes(30),
-        lunch: Date.today().addHours(13).addMinutes(30),
-        dinner: Date.today().addHours(19).addMinutes(30)
-    };
+const school = {
+    /**
+     * @param {Date} date 
+     * @returns {String} date string formats like YYYYMMDD
+     */
+    getDateString: function(date) {
+        let year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
 
-    if (new Date().isBefore(clock.breakfast)) {
-        message.reply(todayMeal.breakfast.dishes.join('\n'));
-    } else {
-        message.reply(tomorrowMeal.breakfast.dishes.join('\n'));
+        month = month > 9 ? month : "0" + month;
+        day  = day > 9 ? day : "0" + day;
+        return year + month + day;
+    },
+
+    /**
+     * @param {String} APIkey 
+     * @param {String} areaCode 
+     * @param {String} schoolCode 
+     * @param {Date} date 
+     * @returns {Object} Meal Infomations
+     */
+    getMeal: function(APIkey, areaCode, schoolCode, date) {
+        let data = JSON.parse(
+            org.jsoup.Jsoup.connect(
+                "https://open.neis.go.kr/hub/mealServiceDietInfo?" +
+                "KEY=" + APIkey +
+                "&Type=json" + 
+                "&ATPT_OFCDC_SC_CODE=" + areaCode +
+                "&SD_SCHUL_CODE=" + schoolCode +
+                "&MLSV_YMD=" + school.getDateString(date)
+            ).ignoreContentType(true).ignoreHttpErrors(true).post().text()
+        );
+
+        return (data.mealServiceDietInfo[0].head[1].RESULT.CODE == "INFO-000") ? {
+            breakfast: {
+                calorie: data.mealServiceDietInfo[1].row[0].CAL_INFO,
+                dishes: data.mealServiceDietInfo[1].row[0].DDISH_NM.replace(/ ?\(.*?\)/g, '').trim().split(' ')
+            },
+            lunch: {
+                calorie: data.mealServiceDietInfo[1].row[1].CAL_INFO,
+                dishes: data.mealServiceDietInfo[1].row[1].DDISH_NM.replace(/ ?\(.*?\)/g, '').trim().split(' ')
+            },
+            dinner: {
+                calorie: data.mealServiceDietInfo[1].row[2].CAL_INFO,
+                dishes: data.mealServiceDietInfo[1].row[2].DDISH_NM.replace(/ ?\(.*?\)/g, '').trim().split(' ')
+            },
+            result: {
+                code: "INFO-000",
+                isSuccess: true
+            }
+        } : {
+            result: {
+                code: data.mealServiceDietInfo[0].head[2].RESULT.CODE,
+                isSuccess: false
+            }            
+        }
     }
-}
-container.register(아침).option({ many: true });
+};
 
-function 점심() {
-    var todayMeal = School.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
-    var tomorrowMeal = School.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
+const command = {
+    아침: function() {
+        var todayMeal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
+        var tomorrowMeal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date().addDays(1));
 
-    var clock = {
-        breakfast: Date.today().addHours(8).addMinutes(30),
-        lunch: Date.today().addHours(13).addMinutes(30),
-        dinner: Date.today().addHours(19).addMinutes(30)
-    };
+        var clock = {};
+        clock.breakfast = new Date();
+        clock.lunch = new Date();
+        clock.dinner = new Date();
+        clock.breakfast.setHours(8, 30, 0);
+        clock.lunch.setHours(13, 30, 0);
+        clock.dinner.setHours(19, 30, 0);
 
-    if (new Date().isBefore(clock.lunch)) {
-        message.reply(todayMeal.lunch.dishes.join('\n'));
-    } else {
-        message.reply(tomorrowMeal.lunch.dishes.join('\n'));
+        if (new Date() < clock.breakfast) {
+            message.reply("🍳 오늘 아침\n━━━━━━\n" + todayMeal.breakfast.dishes.join('\n') + COMPRESS + "\n칼로리: " + todayMeal.breakfast.calorie);
+        } else {
+            message.reply("🍳 내일 아침\n━━━━━━\n" + tomorrowMeal.breakfast.dishes.join('\n') + COMPRESS + "\n칼로리: " + tomorrowMeal.breakfast.calorie);
+        }
+    },
+
+    점심: function() {
+        var todayMeal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
+        var tomorrowMeal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date().addDays(1));
+
+        var clock = {};
+        clock.breakfast = new Date();
+        clock.lunch = new Date();
+        clock.dinner = new Date();
+        clock.breakfast.setHours(8, 30, 0);
+        clock.lunch.setHours(13, 30, 0);
+        clock.dinner.setHours(19, 30, 0);
+
+        if (new Date() < clock.lunch) {
+            message.reply("🍔 오늘 점심\n━━━━━━\n" + todayMeal.lunch.dishes.join('\n') + COMPRESS + "\n칼로리: " + todayMeal.lunch.calorie);
+        } else {
+            message.reply("🍔 내일 점심\n━━━━━━\n" + tomorrowMeal.lunch.dishes.join('\n') + COMPRESS + "\n칼로리: " + tomorrowMeal.lunch.calorie);
+        }
+    },
+
+    저녁: function() {
+        var todayMeal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
+        var tomorrowMeal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date().addDays(1));
+
+        var clock = {};
+        clock.breakfast = new Date();
+        clock.lunch = new Date();
+        clock.dinner = new Date();
+        clock.breakfast.setHours(8, 30, 0);
+        clock.lunch.setHours(13, 30, 0);
+        clock.dinner.setHours(19, 30, 0);
+
+        if (new Date() < clock.dinner) {
+            message.reply("🍽️ 오늘 저녁\n━━━━━━\n" + todayMeal.dinner.dishes.join('\n') + COMPRESS + "\n칼로리: " + todayMeal.dinner.calorie);
+        } else {
+            message.reply("🍽️ 내일 저녁\n━━━━━━\n" + tomorrowMeal.dinner.dishes.join('\n') + COMPRESS + "\n칼로리: " + tomorrowMeal.dinner.calorie);
+        }
+    },
+
+    그끄저께: function 그끄저께() {
+        var d = new Date().addDays(-3);
+
+        var meal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, d);
+        if (!meal.result.isSuccess) {
+            if (meal.result.code == "INFO-200") {
+                message.replyf("[{}]\n\n아직 급식 계획이 정해지지 않았어요.", school.getDateString(d));
+            }
+            else {
+                message.reply("error occured");
+            }
+        }
+        else {
+            message.replyf("[{day}]\n\n🍳 아침\n━━━━\n{breakfast}\n\n🍔 점심\n━━━━\n{lunch}\n\n🍽️ 저녁\n━━━━\n{dinner} {COMPRESS}\n총 칼로리: {kcal} Kcal", {
+                            day: school.getDateString(d),
+                            breakfast: meal.breakfast.dishes.join('\n'),
+                            lunch: meal.lunch.dishes.join('\n'),
+                            dinner: meal.dinner.dishes.join('\n'),
+                            COMPRESS: COMPRESS,
+                            kcal: Number(meal.breakfast.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.lunch.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.dinner.calorie.replace(/[a-zA-Z ]/g, ''))
+                        });
+        }
+    },
+
+    그제: function 그제() {
+        var d = new Date().addDays(-2);
+
+        var meal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, d);
+        if (!meal.result.isSuccess) {
+            if (meal.result.code == "INFO-200") {
+                message.replyf("[{}]\n\n아직 급식 계획이 정해지지 않았어요.", school.getDateString(d));
+            }
+            else {
+                message.reply("error occured");
+            }
+        }
+        else {
+            message.replyf("[{day}]\n\n🍳 아침\n━━━━\n{breakfast}\n\n🍔 점심\n━━━━\n{lunch}\n\n🍽️ 저녁\n━━━━\n{dinner} {COMPRESS}\n총 칼로리: {kcal} Kcal", {
+                            day: school.getDateString(d),
+                            breakfast: meal.breakfast.dishes.join('\n'),
+                            lunch: meal.lunch.dishes.join('\n'),
+                            dinner: meal.dinner.dishes.join('\n'),
+                            COMPRESS: COMPRESS,
+                            kcal: Number(meal.breakfast.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.lunch.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.dinner.calorie.replace(/[a-zA-Z ]/g, ''))
+                        });
+        }
+    },
+
+    어제: function 어제() {
+        var d = new Date().addDays(-1);
+
+        var meal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, d);
+        if (!meal.result.isSuccess) {
+            if (meal.result.code == "INFO-200") {
+                message.replyf("[{}]\n\n아직 급식 계획이 정해지지 않았어요.", school.getDateString(d));
+            }
+            else {
+                message.reply("error occured");
+            }
+        }
+        else {
+            message.replyf("[{day}]\n\n🍳 아침\n━━━━\n{breakfast}\n\n🍔 점심\n━━━━\n{lunch}\n\n🍽️ 저녁\n━━━━\n{dinner} {COMPRESS}\n총 칼로리: {kcal} Kcal", {
+                            day: school.getDateString(d),
+                            breakfast: meal.breakfast.dishes.join('\n'),
+                            lunch: meal.lunch.dishes.join('\n'),
+                            dinner: meal.dinner.dishes.join('\n'),
+                            COMPRESS: COMPRESS,
+                            kcal: Number(meal.breakfast.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.lunch.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.dinner.calorie.replace(/[a-zA-Z ]/g, ''))
+                        });
+        }
+    },
+
+    오늘: function 오늘() {
+        var d = new Date().addDays(0);
+
+        var meal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, d);
+        if (!meal.result.isSuccess) {
+            if (meal.result.code == "INFO-200") {
+                message.replyf("[{}]\n\n아직 급식 계획이 정해지지 않았어요.", school.getDateString(d));
+            }
+            else {
+                message.reply("error occured");
+            }
+        }
+        else {
+            message.replyf("[{day}]\n\n🍳 아침\n━━━━\n{breakfast}\n\n🍔 점심\n━━━━\n{lunch}\n\n🍽️ 저녁\n━━━━\n{dinner} {COMPRESS}\n총 칼로리: {kcal} Kcal", {
+                            day: school.getDateString(d),
+                            breakfast: meal.breakfast.dishes.join('\n'),
+                            lunch: meal.lunch.dishes.join('\n'),
+                            dinner: meal.dinner.dishes.join('\n'),
+                            COMPRESS: COMPRESS,
+                            kcal: Number(meal.breakfast.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.lunch.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.dinner.calorie.replace(/[a-zA-Z ]/g, ''))
+                        });
+        }
+    },
+
+    내일: function 내일() {
+        var d = new Date().addDays(1);
+
+        var meal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, d);
+        if (!meal.result.isSuccess) {
+            if (meal.result.code == "INFO-200") {
+                message.replyf("[{}]\n\n아직 급식 계획이 정해지지 않았어요.", school.getDateString(d));
+            }
+            else {
+                message.reply("error occured");
+            }
+        }
+        else {
+            message.replyf("[{day}]\n\n🍳 아침\n━━━━\n{breakfast}\n\n🍔 점심\n━━━━\n{lunch}\n\n🍽️ 저녁\n━━━━\n{dinner} {COMPRESS}\n총 칼로리: {kcal} Kcal", {
+                            day: school.getDateString(d),
+                            breakfast: meal.breakfast.dishes.join('\n'),
+                            lunch: meal.lunch.dishes.join('\n'),
+                            dinner: meal.dinner.dishes.join('\n'),
+                            COMPRESS: COMPRESS,
+                            kcal: Number(meal.breakfast.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.lunch.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.dinner.calorie.replace(/[a-zA-Z ]/g, ''))
+                        });
+        }
+    },
+
+    모레: function 모레() {
+        var d = new Date().addDays(2);
+
+        var meal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, d);
+        if (!meal.result.isSuccess) {
+            if (meal.result.code == "INFO-200") {
+                message.replyf("[{}]\n\n아직 급식 계획이 정해지지 않았어요.", school.getDateString(d));
+            }
+            else {
+                message.reply("error occured");
+            }
+        }
+        else {
+            message.replyf("[{day}]\n\n🍳 아침\n━━━━\n{breakfast}\n\n🍔 점심\n━━━━\n{lunch}\n\n🍽️ 저녁\n━━━━\n{dinner} {COMPRESS}\n총 칼로리: {kcal} Kcal", {
+                            day: school.getDateString(d),
+                            breakfast: meal.breakfast.dishes.join('\n'),
+                            lunch: meal.lunch.dishes.join('\n'),
+                            dinner: meal.dinner.dishes.join('\n'),
+                            COMPRESS: COMPRESS,
+                            kcal: Number(meal.breakfast.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.lunch.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.dinner.calorie.replace(/[a-zA-Z ]/g, ''))
+                        });
+        }
+    },
+
+    글피: function 글피() {
+        var d = new Date().addDays(3);
+
+        var meal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, d);
+        if (!meal.result.isSuccess) {
+            if (meal.result.code == "INFO-200") {
+                message.replyf("[{}]\n\n아직 급식 계획이 정해지지 않았어요.", school.getDateString(d));
+            }
+            else {
+                message.reply("error occured");
+            }
+        }
+        else {
+            message.replyf("[{day}]\n\n🍳 아침\n━━━━\n{breakfast}\n\n🍔 점심\n━━━━\n{lunch}\n\n🍽️ 저녁\n━━━━\n{dinner} {COMPRESS}\n총 칼로리: {kcal} Kcal", {
+                            day: school.getDateString(d),
+                            breakfast: meal.breakfast.dishes.join('\n'),
+                            lunch: meal.lunch.dishes.join('\n'),
+                            dinner: meal.dinner.dishes.join('\n'),
+                            COMPRESS: COMPRESS,
+                            kcal: Number(meal.breakfast.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.lunch.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.dinner.calorie.replace(/[a-zA-Z ]/g, ''))
+                        });
+        }
+    },
+
+    그글피: function 그글피() {
+        var d = new Date().addDays(4);
+
+        var meal = school.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, d);
+        if (!meal.result.isSuccess) {
+            if (meal.result.code == "INFO-200") {
+                message.replyf("[{}]\n\n아직 급식 계획이 정해지지 않았어요.", school.getDateString(d));
+            }
+            else {
+                message.reply("error occured");
+            }
+        }
+        else {
+            message.replyf("[{day}]\n\n🍳 아침\n━━━━\n{breakfast}\n\n🍔 점심\n━━━━\n{lunch}\n\n🍽️ 저녁\n━━━━\n{dinner} {COMPRESS}\n총 칼로리: {kcal} Kcal", {
+                            day: school.getDateString(d),
+                            breakfast: meal.breakfast.dishes.join('\n'),
+                            lunch: meal.lunch.dishes.join('\n'),
+                            dinner: meal.dinner.dishes.join('\n'),
+                            COMPRESS: COMPRESS,
+                            kcal: Number(meal.breakfast.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.lunch.calorie.replace(/[a-zA-Z ]/g, '')) + Number(meal.dinner.calorie.replace(/[a-zA-Z ]/g, ''))
+                        });
+        }
     }
-}
-container.register(점심).option({ many: true });
-
-function 저녁() {
-    var todayMeal = School.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
-    var tomorrowMeal = School.getMeal("f74ccd1302b44c6fafd38616933d9b2c", "F10", 7380031, new Date());
-
-    var clock = {
-        breakfast: Date.today().addHours(8).addMinutes(30),
-        lunch: Date.today().addHours(13).addMinutes(30),
-        dinner: Date.today().addHours(19).addMinutes(30)
-    };
-
-    if (new Date().isBefore(clock.dinner)) {
-        message.reply(todayMeal.dinner.dishes.join('\n'));
-    } else {
-        message.reply(tomorrowMeal.dinner.dishes.join('\n'));
-    }
-}
-container.register(저녁).option({ many: true });
-
-// const PREFIX = 
-// const PATH = 'sdcard/msgbot/Data/todo.json'
-// const FS = FileStream;
-
-// // 0일째 는 없으니까 앞은 없고, 윤년 때문에 366번째 인덱스까지, 총 길이 367
-// FS.load = (path) => FS.exists(path) ? FS.read(path) : Array.from(Array(367), () => new Array());
-
-// const format = function (string) {
-// 	let options = Array.from(arguments).slice(1);
-
-// 	if (options.length == 1 && options[0] instanceof Object) {
-// 		return string.replace(/{(.*?)}/g, (_, g1) => options[0][g1.trim()]);
-// 	} else {
-// 		let last = 0;
-// 		return string.replace(/{(.*?)}/g, (matched, g1) => (g1 === "" ? options[++last - 1] : options[g1] || matched));
-// 	}
-// };
-
-// const on_message = (msg) => {
-//     if (!msg.content.startsWith(PREFIX)) return;
-
-//     msg.content = msg.content.substring(9);
-//     var splited = msg.content.split(/ +|\\n+/).slice(1);
-
-//     msg.content = splited.join(' ');
-//     msg.options = splited;
-//     msg.replyf = function () { msg.reply(format.apply(null, arguments)); }
-    
-//     // yes ✅ no ⛔ 🗓️📆📅
-//     var calender = FS.load(PATH);
-
-//     commands[msg.options[0]](msg, calender);
-
-//     /* 과제 저장 */
-//     added_hwork = new Task(subjects.물리실험, '클래스룸 설문지 하기', new Date("2022/03/25"));
-//     calender[added_hwork.date.getDayOfYear()].push(added_hwork);
-//     FS.save(PATH, calender);
-// };
-
-// const commands = {
-//     "과제": (msg, data) => {
-//         var now = Date.getDayOfYear();
-//         var string = String();
-
-//         for (let i = now; i < now + 7; i++) {
-//             string += format("{}요일 {}\n", Date.dayLabelList()[now % 7], (i < 3) ? (i < 2) ? (i < 1) ? '(오늘)' : '(내일)' : '(모레)' : '');
-            
-//             if (calender[i].length == 0) {
-//                 string += "  ■ 아직은 없습니다.\n";
-//             }
-//             else {
-//                 for (let j = 0; j < calender[i].length; j++) {
-//                     string += format("  ■ {} 🏷️{}\n", calender[i][j].content, calender[i][j].subject);
-//                 }
-//             }
-//         }
-
-//         msg.reply(string);
-//     },
-
-//     /** $어제, $오늘, $내일, $모레
-//      * 과제, 시간표, 급식 등 출력
-//      */
-
-//     // $캘린더
-//     // $시간표
-//     // $급식
-//     // 에타에서 기상곡 불러오기
-// }
+};
+container.register(command.아침).aliase(/(?:조식|아침)(이)? *(?:뭐|머)?/).option({ many: true });
+container.register(command.점심).aliase(/(?:중식|점심)(이)? *(?:뭐|머)?/).option({ many: true });
+container.register(command.저녁).aliase(/(?:석식|저녁)(이)? *(?:뭐|머)?/).option({ many: true });
+container.register(command.그끄저께);
+container.register(command.그제);
+container.register(command.어제);
+container.register(command.오늘);
+container.register(command.내일);
+container.register(command.모레);
+container.register(command.글피);
+container.register(command.그글피);

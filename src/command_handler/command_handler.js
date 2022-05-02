@@ -76,7 +76,7 @@ Message.prototype = {
  ** 추가됨.
  */
 function Command(func, types) {
-    this.aliase = [];
+    this.aliases = null;
     this.func = func;
     this.types = types;
 
@@ -84,8 +84,8 @@ function Command(func, types) {
 }
 
 Command.prototype = {
-    aliase: function () {
-        this.aliase = this.aliase.concat(Array.from(arguments));
+    aliase: function (ali) {
+        this.aliases = RegExp(ali);
 
         return this;
     },
@@ -119,9 +119,16 @@ Container.prototype = {
     
         let matched_command;
         this.commands.forEach(cmd => {
-            if ((cmd.func.name == message.command) || (cmd.aliase.includes(message.command))) {
+            if (cmd.func.name == message.command) {
                 if ((cmd.many == true) || (cmd.func.length == message.args.length)) {
                     matched_command = cmd;
+                }
+            }
+            else if (cmd.aliases != null) {
+                if (cmd.aliases.test(message.command)) {
+                    if ((cmd.many == true) || (cmd.func.length == message.args.length)) {
+                        matched_command = cmd;
+                    }
                 }
             }
         });
