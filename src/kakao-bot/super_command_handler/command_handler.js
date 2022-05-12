@@ -29,34 +29,32 @@ botCommandLibrary.prototype = {
     execute: function(msg) {
         var args = msg.args;
 
-        var command = this.lib.find(p_command => p_command(args[0]).name.includes(args[0]));
-        if (command == null) return;
-        else command = command(args[0]);
+        var command = this.lib.find(p_command => p_command(msg.command).name.includes(msg.command));
+        if (command == null) 
+            return;
+        else 
+            command = command(msg.command);
 
-        console.log(command); // debug
-        for (configname in this.configFunctions) {
+        for (configname in command.configs) {
             if (this.configFunctions[configname](msg, command.configs[configname]) == false) return;
         }
-        args = args.slice(1);
 
         // todo addArguments 구현 안됨
         // todo matchf가 constructor function 인 경우 형변환
-        while (args.length > 0) {
+        find_command:
+        while (args.length > 0) {            
             if (command.subcommand.length == 0) break;
             
-            console.log(args[0]);
-            command = command.subcommand.find(subcomd => {            
-                var subcmd = subcomd(args[0]);
-                console.log(subcmd); // debug
+            for (let i = 0; i < command.subcommand.length; i++) {
+                var subcmd = command.subcommand[i](args[0]);
 
-                if (subcmd.name.length > 0) {
-                    return subcmd.name.includes(args[0]) && subcmd.matchf(msg);
-                } else {
-                    return subcmd.matchf(msg);
-                }
-            })(args[0]);
+                if (subcmd.isEnd == true) break find_command;
 
-            for (configname in this.configFunctions) {
+                command = (subcmd.name.length > 0) ? subcmd.name.includes(args[0]) && subcmd.matchf(msg) : subcmd.matchf(msg);
+            }
+            command = command(args[0]);
+
+            for (configname in command.configs) {
                 if (this.configFunctions[configname](msg, command.configs[configname]) == false) return;
             }
             args = args.slice(1);
@@ -145,8 +143,6 @@ botCommand.prototype = {
     addArgument: function(match, subcommand) {
         this.matchf = match;
 
-        console.log(subcommand().description, this.description);
-        console.log(subcommand().configs, this.configs);
         subcommand().description = subcommand().description || this.description;
         subcommand().configs = Object.keys(subcommand().configs).length == 0 ? this.configs : subcommand().configs;
         this.subcommand.push(subcommand);
@@ -192,7 +188,8 @@ botCommand.prototype = {
      * @example new botCommand().run(msg => msg.reply("hello world"))
      */
     run: function(e) {
-        this.runcode = e;    
+        this.runcode = e;
+        this.isEnd = true;
         
         return this;
     }
@@ -204,8 +201,8 @@ botCommand.prototype = {
 // };
 
 const msg = {
-    content: "add 1 2 3",
-    args: ["1", "2", "3"],
+    content: "add 2 5 4",
+    args: ["2", "5", "4"],
     room: "dev room",
     command: "add",
     author: {
@@ -233,8 +230,5 @@ commands.register(cmd => new botCommand('add')
     )
     .run('at least one argument')
 );
-
-console.log(commands.lib[0](msg.args[0])); // debug
-console.log(commands.lib[0](msg.args[0]).subcommand[0](msg.args[1])); // debug
 
 console.log(commands.execute(msg));
