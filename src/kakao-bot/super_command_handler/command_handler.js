@@ -1,10 +1,12 @@
 /** Super Command Handler
  * @author Rhseung
- * @version alpha: 2022.05.07 ~ 2022.05.10
+ * @version alpha: 2022.05.07 ~ 2022.05.13
  */
 
 /**
- * 
+ * @class botCommandLibrary class
+ * `lib` registered command collection  
+ * `configFunctions` command config functions collection
  */
 function botCommandLibrary() {
     this.lib = [];
@@ -43,19 +45,28 @@ botCommandLibrary.prototype = {
         }
 
         // todo addArguments 구현 안됨
-        // todo matchf가 constructor function 인 경우 형변환pokwefpokwef;powefpokwefkfkfkfkfkf;pokwerf
+        // todo matchf가 constructor function 인 경우 형변환
         while (args.length > 0 && command.subcommand.length > 0) {
+            let isEnd = command.many;
+
             command = command.subcommand.find(subcomd => {
                 var subcmd = subcomd(args[0]);
-                if (subcmd.matchf == null) return true;
-                return (subcmd.name.length > 0) ? subcmd.name.includes(args[0]) && subcmd.matchf(msg) : subcmd.matchf(msg);
-            })(args[0]);
+
+                if (command.matchf == null) return true;
+                return (subcmd.name.length > 0) ? subcmd.name.includes(args[0]) && command.matchf(args[0], msg) : command.matchf(args[0], msg);
+            });
+
+            if (command == null) return;
+
+            command = isEnd ? command(args) : command(args[0]);
 
             for (configname in command.configs) {
                 if (this.configFunctions[configname](msg, command.configs[configname]) == false) return;
             }
             args = args.slice(1);
         }
+
+        if (command.runcode == null) return;
 
         function runAccordingType(e) {
             switch (e.constructor) {
@@ -68,7 +79,7 @@ botCommandLibrary.prototype = {
                 case Function:
                     return e(msg);
                 default:
-                    throw new TypeError('Syntax: botCommand.run(String | Number | Array | Function)\n' + 'You: botCommand.run(e.constructor.name)');
+                    throw new TypeError('Syntax: botCommand.run(String | Number | Array | Function)\n' + 'You: botCommand.run('+e.constructor.name+')');
             }
         }
 
@@ -77,7 +88,7 @@ botCommandLibrary.prototype = {
 };
 
 /**
- * botCommand class  
+ * @class botCommand class  
  * `name` command's name including aliases  
  * `match` match that use it for choosing commands when command doesn't have names  
  * `description` command's description. use for help command  
@@ -87,13 +98,14 @@ botCommandLibrary.prototype = {
  * `endcommand` command's end command, no more arguments
  */
 function botCommand() {
-    // 필수 (상속 ❌)
+    // 필수
     this.name = Array.from(arguments);
     this.matchf;
 
-    // 선택 (상속 ⭕)
+    // 선택
     this.description = '';
     this.configs = {};
+    this.many = false;
     
     // child
     this.runcode;
@@ -155,6 +167,7 @@ botCommand.prototype = {
      */
     addArguments: function(match, endcommand) {
         this.matchf = match;
+        this.many = true;
 
         // todo 상속 어케할지 고민해봐야됨
         // delete endcommand().addArgument;
@@ -193,40 +206,7 @@ botCommand.prototype = {
     }
 };
 
-// module.exports = {
-//     botCommand: botCommand,
-//     botCommandLibrary: botCommandLibrary
-// };
-
-const msg = {
-    content: "add 2 5 4",
-    args: [],
-    room: "dev room",
-    command: "add",
-    author: {
-        name: "rhseung",
-    },
-    isGroupChat: true,
-    isDebugRoom: true
+module.exports = {
+    botCommand: botCommand,
+    botCommandLibrary: botCommandLibrary
 };
-
-var commands = new botCommandLibrary();
-isNumber = (msg) => /-?\d+/.test(msg.content);
-
-commands.register(cmd => new botCommand('add')
-    .setDescription('add numbers')
-    .setConfigs({ activateRooms: ['dev room'] })
-
-    .addArgument(isNumber, num1 => new botCommand()
-        .addArgument(isNumber, num2 => new botCommand()
-            .addArgument(isNumber, num3 => new botCommand()
-                .run(Number(num1) + Number(num2) + Number(num3))
-            )
-            .run(Number(num1) + Number(num2))
-        )
-        .run(Number(num1))
-    )
-    .run('at least one argument')
-);
-
-console.log(commands.execute(msg));
