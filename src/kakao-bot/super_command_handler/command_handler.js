@@ -3,6 +3,9 @@
  * @version alpha: 2022.05.07 ~ 2022.05.10
  */
 
+/**
+ * 
+ */
 function botCommandLibrary() {
     this.lib = [];
     this.configFunctions = {
@@ -40,19 +43,13 @@ botCommandLibrary.prototype = {
         }
 
         // todo addArguments 구현 안됨
-        // todo matchf가 constructor function 인 경우 형변환
-        find_command:
-        while (args.length > 0) {            
-            if (command.subcommand.length == 0) break;
-            
-            for (let i = 0; i < command.subcommand.length; i++) {
-                var subcmd = command.subcommand[i](args[0]);
-
-                if (subcmd.isEnd == true) break find_command;
-
-                command = (subcmd.name.length > 0) ? subcmd.name.includes(args[0]) && subcmd.matchf(msg) : subcmd.matchf(msg);
-            }
-            command = command(args[0]);
+        // todo matchf가 constructor function 인 경우 형변환pokwefpokwef;powefpokwefkfkfkfkfkf;pokwerf
+        while (args.length > 0 && command.subcommand.length > 0) {
+            command = command.subcommand.find(subcomd => {
+                var subcmd = subcomd(args[0]);
+                if (subcmd.matchf == null) return true;
+                return (subcmd.name.length > 0) ? subcmd.name.includes(args[0]) && subcmd.matchf(msg) : subcmd.matchf(msg);
+            })(args[0]);
 
             for (configname in command.configs) {
                 if (this.configFunctions[configname](msg, command.configs[configname]) == false) return;
@@ -143,8 +140,9 @@ botCommand.prototype = {
     addArgument: function(match, subcommand) {
         this.matchf = match;
 
-        subcommand().description = subcommand().description || this.description;
-        subcommand().configs = Object.keys(subcommand().configs).length == 0 ? this.configs : subcommand().configs;
+        // todo 상속 어케할지 고민해봐야됨
+        // subcommand().description = subcommand().description || this.description;
+        // subcommand().configs = Object.keys(subcommand().configs).length == 0 ? this.configs : subcommand().configs;
         this.subcommand.push(subcommand);
 
         return this;
@@ -158,10 +156,11 @@ botCommand.prototype = {
     addArguments: function(match, endcommand) {
         this.matchf = match;
 
-        delete endcommand().addArgument;
-        delete endcommand().addArguments;
-        endcommand().description = endcommand().description || this.description;
-        endcommand().configs = Object.keys(endcommand().configs).length == 0 ? this.configs : endcommand().configs;
+        // todo 상속 어케할지 고민해봐야됨
+        // delete endcommand().addArgument;
+        // delete endcommand().addArguments;
+        // endcommand().description = endcommand().description || this.description;
+        // endcommand().configs = Object.keys(endcommand().configs).length == 0 ? this.configs : endcommand().configs;
         this.subcommand.push(endcommand);
 
         return this;
@@ -189,7 +188,6 @@ botCommand.prototype = {
      */
     run: function(e) {
         this.runcode = e;
-        this.isEnd = true;
         
         return this;
     }
@@ -202,7 +200,7 @@ botCommand.prototype = {
 
 const msg = {
     content: "add 2 5 4",
-    args: ["2", "5", "4"],
+    args: [],
     room: "dev room",
     command: "add",
     author: {
