@@ -33,6 +33,7 @@ botCommandLibrary.prototype = {
 
     execute: function(msg) {
         var args = msg.args;
+        var idx = 0;
 
         var command = this.lib.find(p_command => p_command(msg.command).name.includes(msg.command));
         if (command == null) 
@@ -44,26 +45,42 @@ botCommandLibrary.prototype = {
             if (this.configFunctions[configname](msg, command.configs[configname]) == false) return;
         }
 
-        // todo addArguments 구현 안됨
-        // todo matchf가 constructor function 인 경우 형변환
         while (args.length > 0 && command.subcommand.length > 0) {
             let isEnd = command.many;
+
+            function isConstructor(f) {
+                try {
+                    new f();
+                } catch (err) {
+                    if (err.message.indexOf('is not a constructor') >= 0) {
+                    return false;
+                    }
+                }
+                return true;
+            }
 
             command = command.subcommand.find(subcomd => {
                 var subcmd = subcomd(args[0]);
 
                 if (command.matchf == null) return true;
-                return (subcmd.name.length > 0) ? subcmd.name.includes(args[0]) && command.matchf(args[0], msg) : command.matchf(args[0], msg);
+                if (isConstructor(command.matchf)) {
+                    msg.args[idx] = command.matchf(msg.args[idx]);
+                    return (subcmd.name.length > 0) ? subcmd.name.includes(args[0]) : true;
+                } else {
+                    return (subcmd.name.length > 0) ? subcmd.name.includes(args[0]) && command.matchf(args[0], msg) : command.matchf(args[0], msg);
+                }
             });
 
             if (command == null) return;
-
             command = isEnd ? command(args) : command(args[0]);
 
             for (configname in command.configs) {
                 if (this.configFunctions[configname](msg, command.configs[configname]) == false) return;
             }
+
+            if (isEnd) break;
             args = args.slice(1);
+            idx++;
         }
 
         if (command.runcode == null) return;
@@ -152,7 +169,6 @@ botCommand.prototype = {
     addArgument: function(match, subcommand) {
         this.matchf = match;
 
-        // todo 상속 어케할지 고민해봐야됨
         // subcommand().description = subcommand().description || this.description;
         // subcommand().configs = Object.keys(subcommand().configs).length == 0 ? this.configs : subcommand().configs;
         this.subcommand.push(subcommand);
@@ -169,9 +185,6 @@ botCommand.prototype = {
         this.matchf = match;
         this.many = true;
 
-        // todo 상속 어케할지 고민해봐야됨
-        // delete endcommand().addArgument;
-        // delete endcommand().addArguments;
         // endcommand().description = endcommand().description || this.description;
         // endcommand().configs = Object.keys(endcommand().configs).length == 0 ? this.configs : endcommand().configs;
         this.subcommand.push(endcommand);
